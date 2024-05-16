@@ -1,6 +1,5 @@
 {
   "name": "drink",
-	"description": "A simple 'drink water' reminder that uses push notification service",
   "version": "1.0.0",
   "main": "app.js",
   "license": "GNU GPL v3.0",
