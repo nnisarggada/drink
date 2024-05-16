@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drink Water Reminder</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+
+  <body
+    style="
+      font-family: &quot;Gill Sans&quot;, &quot;Gill Sans MT&quot;, Calibri,
+        &quot;Trebuchet MS&quot;, sans-serif;
+      text-align: center;
+    "
+  >
+    <header
+      style="
+        padding: 1rem;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1;
+        background-color: #007bff;
+        color: whitesmoke;
+        font-weight: bold;
+        font-size: 1rem;
+      "
+    >
+      <h1>Drink Water!</h1>
+    </header>
+    <main
+      style="
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1rem;
+        text-align: center;
+        background-color: #f0f0ff;
+        color: #333;
+      "
+    >
+      <p style="font-style: italic; line-height: 1.5">
+        "<span id="quoteText"
+          >Stay fluid, stay vibrant: hydration is the key</span
+        >"
+      </p>
+      <button
+        id="remindMeBtn"
+        style="
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          border-radius: 0.25rem;
+          border: none;
+          background-color: #007bff;
+          color: #fff;
+          font-weight: bold;
+          font-size: 1rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+      >
+        Remind Me
+      </button>
+    </main>
+
+    <footer style="width: 100%; padding: 1rem; position: fixed; bottom: 0">
+      <p>
+        Made with ❤️ by
+        <a
+          href="https://nnisarg.in"
+          target="_blank"
+          title="nnisarg.in"
+          style="
+            font-weight: bold;
+            letter-spacing: 0.05rem;
+            color: #e94e56;
+            text-decoration: none;
+          "
+          >nnisarg</a
+        >
+      </p>
+    </footer>
+
+    <script>
+      const waterQuotes = [
+        "Water is life's elixir; sip it often for vitality.",
+        "Hydrate to invigorate: water fuels our essence.",
+        "Nourish your body's roots with the refreshing flow of water.",
+        "Stay fluid, stay vibrant: hydration is the key.",
+        "In every drop of water lies the secret to vitality.",
+        "Let water be your daily dose of refreshment and rejuvenation.",
+        "Keep your spirit afloat with the pure essence of water.",
+        "Quench your thirst, fuel your vitality: water is the source.",
+        "Hydration: the silent hero of health and well-being.",
+        "Water, the liquid lifeline, sustaining our vitality with every sip.",
+      ];
+
+      const text = document.getElementById("quoteText");
+      const quote = waterQuotes[Math.floor(Math.random() * waterQuotes.length)];
+      text.innerHTML = quote;
+
+      // Check if the browser supports service workers
+      if ("serviceWorker" in navigator && "PushManager" in window) {
+        // Register the service worker
+        navigator.serviceWorker
+          .register("service-worker.js")
+          .then(function (registration) {
+            console.log("Service worker registered:", registration);
+          })
+          .catch(function (error) {
+            console.error("Service worker registration failed:", error);
+          });
+      }
+
+      // Handle button click event
+      document
+        .getElementById("remindMeBtn")
+        .addEventListener("click", function () {
+          // Request permission for push notifications
+          Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+              // Subscribe to push notifications
+              navigator.serviceWorker.ready.then(
+                function (serviceWorkerRegistration) {
+                  serviceWorkerRegistration.pushManager
+                    .subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: urlB64ToUint8Array(
+                        "BK706eI71lwQ4I2kOn7AJ4WVeVKajgP6b1yG5qZIxMP38zcxl-7f3qWA5-qzdTgEoSKv6ihh63s3ESj92f3T-GA",
+                      ),
+                    })
+                    .then(function (subscription) {
+                      console.log("Push subscription:", subscription);
+                      // Send the subscription information to your backend server
+                      fetch("/subscribe", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(subscription),
+                      })
+                        .then(function (response) {
+                          if (!response.ok) {
+                            throw new Error(
+                              "Failed to subscribe to push notifications",
+                            );
+                          }
+                          console.log("Subscribed to push notifications");
+                          alert(
+                            "You will now receive a drink water reminder every hour!",
+                          );
+                        })
+                        .catch(function (error) {
+                          console.error(
+                            "Error subscribing to push notifications:",
+                            error,
+                          );
+                        });
+                    })
+                    .catch(function (error) {
+                      console.error(
+                        "Error subscribing to push notifications:",
+                        error,
+                      );
+                    });
+                },
+              );
+            }
+          });
+        });
+
+      // Convert VAPID key to UInt8Array
+      function urlB64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/\-/g, "+")
+          .replace(/_/g, "/");
+        console.log(base64);
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+    </script>
+  </body>
+</html>
